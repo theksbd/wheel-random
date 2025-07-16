@@ -2,4 +2,4 @@
 
 # Live Site
 
-[Wheel Random](https://wheel-random.vercel.app/)
+[Wheel Random](https://wheel-random-theksbd.vercel.app/)
