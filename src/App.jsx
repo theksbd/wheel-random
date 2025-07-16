@@ -1,29 +1,25 @@
 import { Play, RotateCcw, Settings, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const App = () => {
-  const [entries, setEntries] = useState([
-    'Alice',
-    'Bob',
-    'Charlie',
-    'Diana',
-    'Eve',
-    'Frank',
-    'Grace',
-    'Henry'
-  ]);
-  const [entriesText, setEntriesText] = useState(
-    'Alice\nBob\nCharlie\nDiana\nEve\nFrank\nGrace\nHenry'
-  );
+  const [entries, setEntries] = useState([]);
+  const [entriesText, setEntriesText] = useState(() => {
+    const savedWheelData = localStorage.getItem('wheelData');
+    return savedWheelData
+      ? JSON.parse(savedWheelData).entriesText
+      : 'Alice\nBob\nCharlie\nDiana\nEve\nFrank\nGrace\nHenry';
+  });
+  const [spinDuration, setSpinDuration] = useState(() => {
+    const savedWheelData = localStorage.getItem('wheelData');
+    return savedWheelData ? JSON.parse(savedWheelData).spinDuration : 3;
+  });
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState('');
   const [showResult, setShowResult] = useState(false);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  const [removeWinner, setRemoveWinner] = useState(false);
-  const [spinDuration, setSpinDuration] = useState(3);
 
-  // const wheelRef = useRef(null);
   const canvasRef = useRef(null);
 
   // Colors for wheel segments
@@ -87,7 +83,7 @@ const App = () => {
       ctx.font = 'bold 16px Arial';
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
       ctx.shadowBlur = 2;
-      ctx.fillText(entry, radius * 0.3, 0);
+      ctx.fillText(entry.slice(0, 15), radius * 0.3, 0); // Optional trim
       ctx.restore();
     });
 
@@ -100,6 +96,13 @@ const App = () => {
     ctx.lineWidth = 2;
     ctx.stroke();
   };
+
+  useEffect(() => {
+    localStorage.setItem(
+      'wheelData',
+      JSON.stringify({ entriesText, spinDuration })
+    );
+  }, [entriesText, spinDuration]);
 
   useEffect(() => {
     drawWheel();
@@ -117,7 +120,7 @@ const App = () => {
   const copyToClipboard = async text => {
     try {
       await navigator.clipboard.writeText(text);
-      // Could add a toast notification here
+      toast.success(`Copied to clipboard! 🎉\n${text}`);
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
@@ -189,14 +192,6 @@ const App = () => {
         setResult(winner);
         setShowResult(true);
         setIsSpinning(false);
-
-        // Remove winner if option is enabled
-        if (removeWinner) {
-          setTimeout(() => {
-            const newEntries = entries.filter(entry => entry !== winner);
-            setEntriesText(newEntries.join('\n'));
-          }, 2000);
-        }
       }
     };
 
@@ -220,18 +215,20 @@ const App = () => {
             <div className='bg-white rounded-2xl shadow-2xl p-8'>
               <div className='relative flex justify-center mb-8'>
                 <div className='relative'>
-                  <canvas
-                    ref={canvasRef}
-                    width={400}
-                    height={400}
-                    className='drop-shadow-lg'
-                    style={{
-                      transform: `rotate(${wheelRotation}rad)`,
-                      transition: isSpinning
-                        ? 'none'
-                        : 'transform 0.5s ease-out'
-                    }}
-                  />
+                  <div className='cursor-pointer' onClick={spinWheel}>
+                    <canvas
+                      ref={canvasRef}
+                      width={400}
+                      height={400}
+                      className='drop-shadow-lg'
+                      style={{
+                        transform: `rotate(${wheelRotation}rad)`,
+                        transition: isSpinning
+                          ? 'none'
+                          : 'transform 0.5s ease-out'
+                      }}
+                    />
+                  </div>
                   {/* Static pointer overlay */}
                   <div className='absolute inset-0 pointer-events-none'>
                     <div
@@ -239,7 +236,8 @@ const App = () => {
                       style={{
                         right: '10px',
                         top: '50%',
-                        transform: 'translateY(-50%)'
+                        transform:
+                          'translateY(-50%) translateX(100%) rotate(180deg)'
                       }}
                     />
                   </div>
@@ -278,21 +276,6 @@ const App = () => {
                   <h3 className='text-lg font-semibold mb-4'>Settings</h3>
                   <div className='space-y-4'>
                     <div className='flex items-center gap-3'>
-                      <input
-                        type='checkbox'
-                        id='removeWinner'
-                        checked={removeWinner}
-                        onChange={e => setRemoveWinner(e.target.checked)}
-                        className='w-4 h-4 text-blue-600'
-                      />
-                      <label
-                        htmlFor='removeWinner'
-                        className='text-sm font-medium text-gray-700'
-                      >
-                        Remove winner after spinning
-                      </label>
-                    </div>
-                    <div className='flex items-center gap-3'>
                       <label
                         htmlFor='spinDuration'
                         className='text-sm font-medium text-gray-700'
@@ -322,7 +305,7 @@ const App = () => {
               {/* Result */}
               {showResult && (
                 <div className='text-center'>
-                  <div className='inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-2xl shadow-lg transform animate-pulse'>
+                  <div className='bg-gradient-to-r from-blue-500 to-teal-400 text-white px-8 py-4 rounded-2xl shadow-lg transform animate-pulse'>
                     <h2 className='text-2xl font-bold mb-2'>🎉 Winner! 🎉</h2>
                     <p className='text-3xl font-bold'>{result}</p>
                     <div className='flex gap-2 justify-center mt-4'>
@@ -332,21 +315,17 @@ const App = () => {
                       >
                         Copy to Clipboard
                       </button>
-                    </div>
-                  </div>
-                  {!removeWinner && (
-                    <div className='mt-4 text-center'>
-                      <p className='text-gray-600 text-sm mb-2'>
-                        Remove winner from list?
-                      </p>
                       <button
-                        onClick={removeWinnerFromList}
-                        className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors'
+                        onClick={() => {
+                          copyToClipboard(result);
+                          removeWinnerFromList();
+                        }}
+                        className='bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors'
                       >
-                        Remove Winner
+                        Copy and Remove
                       </button>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
