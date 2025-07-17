@@ -106,6 +106,7 @@ const App = () => {
 
   useEffect(() => {
     drawWheel();
+    // eslint-disable-next-line
   }, [entries, wheelRotation]);
 
   // Update entries when text changes
@@ -212,7 +213,12 @@ const App = () => {
         <div className='grid lg:grid-cols-2 gap-8'>
           {/* Wheel Section */}
           <div className='lg:col-span-1'>
-            <div className='bg-white rounded-2xl shadow-2xl p-8'>
+            {/* <div className='bg-white rounded-2xl shadow-2xl p-8'> */}
+            <div
+              className={`bg-white rounded-2xl shadow-2xl p-8 ${
+                showResult || showSettings ? 'h-full' : ''
+              }`}
+            >
               <div className='relative flex justify-center mb-8'>
                 <div className='relative'>
                   <div className='cursor-pointer' onClick={spinWheel}>
@@ -272,7 +278,7 @@ const App = () => {
 
               {/* Settings Panel */}
               {showSettings && (
-                <div className='bg-gray-50 rounded-lg p-6 mb-6'>
+                <div className='bg-gray-100 rounded-lg p-6 mb-6'>
                   <h3 className='text-lg font-semibold mb-4'>Settings</h3>
                   <div className='space-y-4'>
                     <div className='flex items-center gap-3'>
@@ -352,21 +358,21 @@ const App = () => {
                   onChange={e => setEntriesText(e.target.value)}
                   placeholder='Enter names, one per line...'
                   className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
-                  rows={8}
+                  rows={12}
                 />
               </div>
 
               {/* Entries List */}
-              <div className='space-y-2 mb-6 max-h-96 overflow-y-auto'>
+              <div className='space-y-2 mb-6 max-h-48 overflow-y-auto'>
                 {entries.map((entry, index) => (
                   <div
                     key={index}
-                    className='flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg'
+                    className='flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg mr-2'
                   >
                     <span className='font-medium text-gray-700'>{entry}</span>
                     <button
                       onClick={() => removeEntry(index)}
-                      className='text-red-500 hover:text-red-700 transition-colors'
+                      className='text-red-500 hover:text-red-700 transition-colors cursor-pointer'
                     >
                       <Trash2 size={18} />
                     </button>
